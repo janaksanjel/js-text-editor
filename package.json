@@ -1,0 +1,51 @@
+{
+  "name": "js-text-editor",
+  "version": "1.0.2",
+  "description": "A rich text editor for JavaScript applications with formatting tools and modern UI.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janaksanjel/js-text-editor.git"
+  },
+  "keywords": [
+    "rich",
+    "text",
+    "editor",
+    "react",
+    "javascript"
+  ],
+  "author": "janaksanjel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/janaksanjel/js-text-editor/issues"
+  },
+  "homepage": "https://github.com/janaksanjel/js-text-editor#readme",
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "react-bootstrap": "^2.0.0",
+    "bootstrap": "^5.0.0",
+    "react-icons": "^5.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-babel": "^6.0.4",
+    "@babel/core": "^7.25.8",
+    "@babel/preset-react": "^7.25.7",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.24.0",
+    "rollup-plugin-postcss": "^4.0.2"
+  },
+  "files": [
+    "dist",
+    "img"
+  ]
+}
