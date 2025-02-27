@@ -1,6 +1,6 @@
 {
   "name": "js-text-editor",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "description": "A rich text editor for JavaScript applications with formatting tools and modern UI.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -45,7 +45,7 @@
     "rollup-plugin-postcss": "^4.0.2"
   },
   "files": [
-    "dist",
-    "img"
+    "dist"
+    
   ]
 }
