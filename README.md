@@ -2,7 +2,7 @@
 
 A rich text editor for React and JavaScript applications featuring a modern UI and a wide range of formatting tools, including bold, italic, tables, links, and more.
 
-![alt text](./img/img1.png)
+![alt text](img1.png)
 
 ## Installation
 
