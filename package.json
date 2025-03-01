@@ -1,6 +1,6 @@
 {
   "name": "js-text-editor",
-  "version": "1.0.9",
+  "version": "1.1.2",
   "description": "A rich text editor for JavaScript applications with formatting tools and modern UI.",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

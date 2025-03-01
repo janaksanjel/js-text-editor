@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-
 import {
   FaBold,
   FaItalic,
@@ -57,8 +56,57 @@ import {
   Dropdown,
 } from "react-bootstrap";
 
-const JsTextEditor = () => {
-  const [editorContent, setEditorContent] = useState("<p></p>");
+const JsTextEditor = ({ style, config = {}, value, onChange }) => {
+  const defaultConfig = {
+    readonly: false,
+    toolbar: true,
+    toolbarSticky: true,
+    height: "500px",
+    minHeight: "300px",
+    maxHeight: "500px",
+    overflowY: "auto",
+    buttons: [
+      "new",
+      "save",
+      "open",
+      "saveAsDoc",
+      "print",
+      "saveAsPDF",
+      "cut",
+      "copy",
+      "paste",
+      "undo",
+      "redo",
+      "heading",
+      "font",
+      "bold",
+      "italic",
+      "underline",
+      "strikethrough",
+      "superscript",
+      "subscript",
+      "alignLeft",
+      "alignCenter",
+      "alignRight",
+      "alignJustify",
+      "ul",
+      "ol",
+      "indent",
+      "outdent",
+      "link",
+      "image",
+      "table",
+      "horizontalRule",
+      "video",
+      "code",
+      "source",
+      "expand",
+    ],
+  };
+
+  const mergedConfig = { ...defaultConfig, ...config };
+
+  const [editorContent, setEditorContent] = useState(value || "<p></p>");
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
@@ -98,6 +146,7 @@ const JsTextEditor = () => {
   const fileInputRef = useRef(null);
   const containerRef = useRef(null);
 
+  // Load saved documents from localStorage
   useEffect(() => {
     const loadSavedDocsList = () => {
       const docs = [];
@@ -110,12 +159,15 @@ const JsTextEditor = () => {
     loadSavedDocsList();
   }, []);
 
-  // Set initial content only on mount
+  // Sync editor content with the value prop
   useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = editorContent;
+    if (value) {
+      setEditorContent(value);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = value;
+      }
     }
-  }, []);
+  }, [value]);
 
   const modernStyles = {
     container: {
@@ -127,6 +179,7 @@ const JsTextEditor = () => {
       boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
       fontFamily: "'Inter', 'Roboto', 'Helvetica', sans-serif",
       position: "relative",
+      ...style,
     },
     fullscreen: {
       position: "fixed",
@@ -149,6 +202,7 @@ const JsTextEditor = () => {
       flexWrap: "wrap",
       gap: "8px",
       alignItems: "center",
+      ...(mergedConfig.toolbarSticky ? { position: "sticky", top: 0, zIndex: 10 } : {}),
     },
     toolbarGroup: {
       display: "flex",
@@ -180,19 +234,22 @@ const JsTextEditor = () => {
       padding: "8px",
     },
     editor: {
-      minHeight: "50vh",
-      maxHeight: "50vh",
+      height: mergedConfig.height,
+      minHeight: mergedConfig.minHeight,
+      maxHeight: mergedConfig.maxHeight,
       padding: "16px",
       border: "1px solid #E5E7EB",
       borderRadius: "4px",
       backgroundColor: "#FFFFFF",
       outline: "none",
-      overflowY: "auto",
+      overflowY: mergedConfig.overflowY,
       margin: "12px",
-      direction: "ltr", // Ensure left-to-right text direction
+      direction: "ltr",
     },
     preview: {
-      minHeight: "50vh",
+      height: mergedConfig.height,
+      minHeight: mergedConfig.minHeight,
+      maxHeight: mergedConfig.maxHeight,
       padding: "16px",
       border: "1px solid #E5E7EB",
       borderRadius: "4px",
@@ -228,27 +285,23 @@ const JsTextEditor = () => {
     default: {
       tableStyle: "border-collapse: collapse; width: 100%;",
       cellStyle: "padding: 8px; border: 1px solid #E5E7EB;",
-      headerStyle:
-        "background-color: #F7F7F7; font-weight: 600; padding: 8px; border: 1px solid #E5E7EB;",
+      headerStyle: "background-color: #F7F7F7; font-weight: 600; padding: 8px; border: 1px solid #E5E7EB;",
     },
     striped: {
       tableStyle: "border-collapse: collapse; width: 100%;",
       cellStyle: "padding: 8px; border: 1px solid #E5E7EB;",
-      headerStyle:
-        "background-color: #10B981; color: white; font-weight: 600; padding: 8px; border: 1px solid #10B981;",
+      headerStyle: "background-color: #10B981; color: white; font-weight: 600; padding: 8px; border: 1px solid #10B981;",
       rowStyle: "background-color: #F9FAFB;",
     },
     borderless: {
       tableStyle: "border-collapse: collapse; width: 100%;",
       cellStyle: "padding: 8px; border-bottom: 1px solid #E5E7EB;",
-      headerStyle:
-        "border-bottom: 2px solid #E5E7EB; font-weight: 600; padding: 8px;",
+      headerStyle: "border-bottom: 2px solid #E5E7EB; font-weight: 600; padding: 8px;",
     },
     minimal: {
       tableStyle: "border-collapse: collapse; width: 100%;",
       cellStyle: "padding: 8px;",
-      headerStyle:
-        "border-bottom: 2px solid #333333; font-weight: 600; padding: 8px;",
+      headerStyle: "border-bottom: 2px solid #333333; font-weight: 600; padding: 8px;",
     },
   };
 
@@ -304,6 +357,7 @@ const JsTextEditor = () => {
       const currentContent = editorRef.current.innerHTML;
       setEditorContent(currentContent);
       addToHistory(currentContent);
+      if (onChange) onChange(currentContent);
     }
     editorRef.current.focus();
   };
@@ -398,21 +452,16 @@ const JsTextEditor = () => {
     if (headerRow) {
       tableHtml += "<thead><tr>";
       for (let j = 0; j < tableCols; j++) {
-        tableHtml += `<th style="${selectedStyle.headerStyle}">Header ${j + 1
-          }</th>`;
+        tableHtml += `<th style="${selectedStyle.headerStyle}">Header ${j + 1}</th>`;
       }
       tableHtml += "</tr></thead>";
     }
     tableHtml += "<tbody>";
     for (let i = 0; i < tableRows; i++) {
-      const rowStyle =
-        tableStyle === "striped" && i % 2 === 1
-          ? ` style="${selectedStyle.rowStyle}"`
-          : "";
+      const rowStyle = tableStyle === "striped" && i % 2 === 1 ? ` style="${selectedStyle.rowStyle}"` : "";
       tableHtml += `<tr${rowStyle}>`;
       for (let j = 0; j < tableCols; j++) {
-        tableHtml += `<td style="${selectedStyle.cellStyle}">Cell ${i + 1}-${j + 1
-          }</td>`;
+        tableHtml += `<td style="${selectedStyle.cellStyle}">Cell ${i + 1}-${j + 1}</td>`;
       }
       tableHtml += "</tr>";
     }
@@ -428,6 +477,7 @@ const JsTextEditor = () => {
       const currentContent = editorRef.current.innerHTML;
       setEditorContent(currentContent);
       addToHistory(currentContent);
+      if (onChange) onChange(currentContent);
     }
     setShowTableModal(false);
   };
@@ -505,6 +555,7 @@ const JsTextEditor = () => {
       addToHistory(savedContent);
       setShowSavedDocsModal(false);
       showNotify(`Document "${name}" loaded successfully!`);
+      if (onChange) onChange(savedContent);
     }
   };
 
@@ -543,8 +594,7 @@ const JsTextEditor = () => {
   };
 
   const handleApplyTextColor = () => formatText("foreColor", textColor);
-  const handleApplyBackgroundColor = () =>
-    formatText("hiliteColor", backgroundColor);
+  const handleApplyBackgroundColor = () => formatText("hiliteColor", backgroundColor);
   const handleUndo = () => navigateHistory(-1) || formatText("undo");
   const handleRedo = () => navigateHistory(1) || formatText("redo");
   const applyHeading = (level) => formatText("formatBlock", `<h${level}>`);
@@ -558,6 +608,7 @@ const JsTextEditor = () => {
         const text = editorRef.current.innerText;
         setWordCount(text.split(/\s+/).filter(Boolean).length);
         setCharCount(text.length);
+        if (onChange) onChange(currentContent);
       }, 300)();
     }
   };
@@ -579,20 +630,237 @@ const JsTextEditor = () => {
     document.addEventListener("MSFullscreenChange", handleFullScreenChange);
     return () => {
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        handleFullScreenChange
-      );
-      document.removeEventListener(
-        "mozfullscreenchange",
-        handleFullScreenChange
-      );
-      document.removeEventListener(
-        "MSFullscreenChange",
-        handleFullScreenChange
-      );
+      document.removeEventListener("webkitfullscreenchange", handleFullScreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullScreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullScreenChange);
     };
   }, []);
+
+  const buttonComponents = {
+    new: (
+      <button
+        style={modernStyles.button}
+        onClick={() => {
+          setDocName("Untitled Document");
+          setEditorContent("<p></p>");
+          if (editorRef.current) editorRef.current.innerHTML = "<p></p>";
+          addToHistory("<p></p>");
+          if (onChange) onChange("<p></p>");
+        }}
+      >
+        <FaFile /> New
+      </button>
+    ),
+    save: (
+      <button style={modernStyles.button} onClick={saveDocument}>
+        <FaSave /> Save
+      </button>
+    ),
+    open: (
+      <button style={modernStyles.button} onClick={() => setShowSavedDocsModal(true)}>
+        <FaHistory /> Open
+      </button>
+    ),
+    saveAsDoc: (
+      <button style={modernStyles.button} onClick={saveAsDoc}>
+        <FaDownload /> Save as DOC
+      </button>
+    ),
+    print: (
+      <button style={modernStyles.button} onClick={handlePrint}>
+        <FaPrint /> Print
+      </button>
+    ),
+    saveAsPDF: (
+      <button style={modernStyles.button} onClick={handleSaveAsPDF}>
+        <FaFileExport /> Save as PDF
+      </button>
+    ),
+    cut: (
+      <button style={modernStyles.button} onClick={() => formatText("cut")}>
+        <FaCut /> Cut
+      </button>
+    ),
+    copy: (
+      <button style={modernStyles.button} onClick={handleCopy}>
+        <FaCopy /> Copy
+      </button>
+    ),
+    paste: (
+      <button style={modernStyles.button} onClick={() => formatText("paste")}>
+        <FaPaste /> Paste
+      </button>
+    ),
+    undo: (
+      <button style={modernStyles.button} onClick={handleUndo}>
+        <FaUndo /> Undo
+      </button>
+    ),
+    redo: (
+      <button style={modernStyles.button} onClick={handleRedo}>
+        <FaRedo /> Redo
+      </button>
+    ),
+    heading: (
+      <Dropdown>
+        <Dropdown.Toggle style={modernStyles.button}>
+          <FaHeading />
+        </Dropdown.Toggle>
+        <Dropdown.Menu style={modernStyles.dropdown}>
+          <Dropdown.Item onClick={() => applyHeading(1)}>Heading 1</Dropdown.Item>
+          <Dropdown.Item onClick={() => applyHeading(2)}>Heading 2</Dropdown.Item>
+          <Dropdown.Item onClick={() => applyHeading(3)}>Heading 3</Dropdown.Item>
+          <Dropdown.Item onClick={() => applyHeading(4)}>Heading 4</Dropdown.Item>
+          <Dropdown.Item onClick={() => formatText("formatBlock", "<p>")}>Paragraph</Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    ),
+    font: (
+      <div style={{ position: "relative" }}>
+        <button style={modernStyles.button} onClick={() => setShowFontDropdown(!showFontDropdown)}>
+          <FaFont /> {fontFamily} <FaChevronDown />
+        </button>
+        {showFontDropdown && (
+          <div style={{ ...modernStyles.dropdown, position: "absolute", zIndex: 1000 }}>
+            <select
+              style={{ width: "150px", padding: "4px", marginBottom: "8px" }}
+              value={fontFamily}
+              onChange={(e) => handleFontChange(e.target.value)}
+            >
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Arial">Arial</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Verdana">Verdana</option>
+            </select>
+            <select
+              style={{ width: "60px", padding: "4px" }}
+              value={fontSize}
+              onChange={(e) => handleFontSizeChange(e.target.value)}
+            >
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+              <option value="14">14</option>
+              <option value="18">18</option>
+              <option value="24">24</option>
+              <option value="36">36</option>
+            </select>
+          </div>
+        )}
+      </div>
+    ),
+    bold: (
+      <button style={modernStyles.button} onClick={() => formatText("bold")}>
+        <FaBold />
+      </button>
+    ),
+    italic: (
+      <button style={modernStyles.button} onClick={() => formatText("italic")}>
+        <FaItalic />
+      </button>
+    ),
+    underline: (
+      <button style={modernStyles.button} onClick={() => formatText("underline")}>
+        <FaUnderline />
+      </button>
+    ),
+    strikethrough: (
+      <button style={modernStyles.button} onClick={() => formatText("strikeThrough")}>
+        <FaStrikethrough />
+      </button>
+    ),
+    superscript: (
+      <button style={modernStyles.button} onClick={() => formatText("superscript")}>
+        <FaSuperscript />
+      </button>
+    ),
+    subscript: (
+      <button style={modernStyles.button} onClick={() => formatText("subscript")}>
+        <FaSubscript />
+      </button>
+    ),
+    alignLeft: (
+      <button style={modernStyles.button} onClick={() => formatText("justifyLeft")}>
+        <FaAlignLeft />
+      </button>
+    ),
+    alignCenter: (
+      <button style={modernStyles.button} onClick={() => formatText("justifyCenter")}>
+        <FaAlignCenter />
+      </button>
+    ),
+    alignRight: (
+      <button style={modernStyles.button} onClick={() => formatText("justifyRight")}>
+        <FaAlignRight />
+      </button>
+    ),
+    alignJustify: (
+      <button style={modernStyles.button} onClick={() => formatText("justifyFull")}>
+        <FaAlignJustify />
+      </button>
+    ),
+    ul: (
+      <button style={modernStyles.button} onClick={() => formatText("insertUnorderedList")}>
+        <FaListUl />
+      </button>
+    ),
+    ol: (
+      <button style={modernStyles.button} onClick={() => formatText("insertOrderedList")}>
+        <FaListOl />
+      </button>
+    ),
+    indent: (
+      <button style={modernStyles.button} onClick={() => formatText("indent")}>
+        <FaIndent />
+      </button>
+    ),
+    outdent: (
+      <button style={modernStyles.button} onClick={() => formatText("outdent")}>
+        <FaOutdent />
+      </button>
+    ),
+    link: (
+      <button style={modernStyles.button} onClick={handleOpenLinkModal}>
+        <FaLink />
+      </button>
+    ),
+    image: (
+      <button style={modernStyles.button} onClick={handleImage}>
+        <FaImage />
+      </button>
+    ),
+    table: (
+      <button style={modernStyles.button} onClick={() => setShowTableModal(true)}>
+        <FaTable />
+      </button>
+    ),
+    horizontalRule: (
+      <button style={modernStyles.button} onClick={() => formatText("insertHorizontalRule")}>
+        <FaRulerHorizontal />
+      </button>
+    ),
+    video: (
+      <button style={modernStyles.button} onClick={handleOpenVideoModal}>
+        <FaVideo />
+      </button>
+    ),
+    code: (
+      <button style={modernStyles.button} onClick={() => formatText("formatBlock", "<pre>")}>
+        <FaCode />
+      </button>
+    ),
+    source: (
+      <button style={modernStyles.button} onClick={handleViewSource}>
+        <FaCode /> Source
+      </button>
+    ),
+    expand: (
+      <button style={modernStyles.button} onClick={toggleFullScreen}>
+        {isFullScreen ? <FaCompress /> : <FaExpand />}
+      </button>
+    ),
+  };
 
   return (
     <div
@@ -678,301 +946,47 @@ const JsTextEditor = () => {
         </div>
       </div>
 
-      {viewMode === "edit" && (
-        <>
-          <div style={modernStyles.toolbar}>
-            <div style={modernStyles.toolbarGroup}>
-              <button
-                style={modernStyles.button}
-                onClick={() => {
-                  setDocName("Untitled Document");
-                  setEditorContent("<p></p>");
-                  if (editorRef.current)
-                    editorRef.current.innerHTML = "<p></p>";
-                  addToHistory("<p></p>");
-                }}
-              >
-                <FaFile /> New
-              </button>
-              <button style={modernStyles.button} onClick={saveDocument}>
-                <FaSave /> Save
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => setShowSavedDocsModal(true)}
-              >
-                <FaHistory /> Open
-              </button>
-              <button style={modernStyles.button} onClick={saveAsDoc}>
-                <FaDownload /> Save as DOC
-              </button>
-              <button style={modernStyles.button} onClick={handlePrint}>
-                <FaPrint /> Print
-              </button>
-              <button style={modernStyles.button} onClick={handleSaveAsPDF}>
-                <FaFileExport /> Save as PDF
-              </button>
+      {viewMode === "edit" && mergedConfig.toolbar && (
+        <div style={modernStyles.toolbar}>
+          {mergedConfig.buttons.map((btn, index) => (
+            <div key={index} style={modernStyles.toolbarGroup}>
+              {buttonComponents[btn]}
             </div>
-            <div style={modernStyles.toolbarGroup}>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("cut")}
-              >
-                <FaCut /> Cut
-              </button>
-              <button style={modernStyles.button} onClick={handleCopy}>
-                <FaCopy /> Copy
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("paste")}
-              >
-                <FaPaste /> Paste
-              </button>
-              <button style={modernStyles.button} onClick={handleUndo}>
-                <FaUndo /> Undo
-              </button>
-              <button style={modernStyles.button} onClick={handleRedo}>
-                <FaRedo /> Redo
-              </button>
-              <div style={modernStyles.toolbarGroup}>
-                <Dropdown>
-                  <Dropdown.Toggle style={modernStyles.button}>
-                    <FaHeading /> Headings
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu style={modernStyles.dropdown}>
-                    <Dropdown.Item onClick={() => applyHeading(1)}>
-                      Heading 1
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => applyHeading(2)}>
-                      Heading 2
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => applyHeading(3)}>
-                      Heading 3
-                    </Dropdown.Item>
-                    <Dropdown.Item onClick={() => applyHeading(4)}>
-                      Heading 4
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      onClick={() => formatText("formatBlock", "<p>")}
-                    >
-                      Paragraph
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
-                <input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => setTextColor(e.target.value)}
-                  style={{ width: "24px", height: "24px" }}
-                />
-                <button
-                  style={modernStyles.button}
-                  onClick={handleApplyTextColor}
-                >
-                  <FaPalette />
-                </button>
-                <input
-                  type="color"
-                  value={backgroundColor}
-                  onChange={(e) => setBackgroundColor(e.target.value)}
-                  style={{ width: "24px", height: "24px" }}
-                />
-                <button
-                  style={modernStyles.button}
-                  onClick={handleApplyBackgroundColor}
-                >
-                  <FaHighlighter />
-                </button>
-              </div>
-            </div>
-            <div style={modernStyles.toolbarGroup}>
-              <div style={{ position: "relative" }}>
-                <button
-                  style={modernStyles.button}
-                  onClick={() => setShowFontDropdown(!showFontDropdown)}
-                >
-                  <FaFont /> {fontFamily} <FaChevronDown />
-                </button>
-                {showFontDropdown && (
-                  <div
-                    style={{
-                      ...modernStyles.dropdown,
-                      position: "absolute",
-                      zIndex: 1000,
-                    }}
-                  >
-                    <select
-                      style={{
-                        width: "150px",
-                        padding: "4px",
-                        marginBottom: "8px",
-                      }}
-                      value={fontFamily}
-                      onChange={(e) => handleFontChange(e.target.value)}
-                    >
-                      <option value="Inter">Inter</option>
-                      <option value="Roboto">Roboto</option>
-                      <option value="Arial">Arial</option>
-                      <option value="Times New Roman">Times New Roman</option>
-                      <option value="Verdana">Verdana</option>
-                    </select>
-                    <select
-                      style={{ width: "60px", padding: "4px" }}
-                      value={fontSize}
-                      onChange={(e) => handleFontSizeChange(e.target.value)}
-                    >
-                      <option value="8">8</option>
-                      <option value="10">10</option>
-                      <option value="12">12</option>
-                      <option value="14">14</option>
-                      <option value="18">18</option>
-                      <option value="24">24</option>
-                      <option value="36">36</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("bold")}
-              >
-                <FaBold />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("italic")}
-              >
-                <FaItalic />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("underline")}
-              >
-                <FaUnderline />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("strikeThrough")}
-              >
-                <FaStrikethrough />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("superscript")}
-              >
-                <FaSuperscript />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("subscript")}
-              >
-                <FaSubscript />
-              </button>
-            </div>
-            <div style={modernStyles.toolbarGroup}>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("justifyLeft")}
-              >
-                <FaAlignLeft />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("justifyCenter")}
-              >
-                <FaAlignCenter />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("justifyRight")}
-              >
-                <FaAlignRight />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("justifyFull")}
-              >
-                <FaAlignJustify />
-              </button>
-            </div>
-            <div style={{ ...modernStyles.toolbarGroup, borderRight: "none" }}>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("insertUnorderedList")}
-              >
-                <FaListUl />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("insertOrderedList")}
-              >
-                <FaListOl />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("indent")}
-              >
-                <FaIndent />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("outdent")}
-              >
-                <FaOutdent />
-              </button>
-              <button style={modernStyles.button} onClick={handleOpenLinkModal}>
-                <FaLink />
-              </button>
-              <button style={modernStyles.button} onClick={handleImage}>
-                <FaImage />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => setShowTableModal(true)}
-              >
-                <FaTable />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("insertHorizontalRule")}
-              >
-                <FaRulerHorizontal />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={handleOpenVideoModal}
-              >
-                <FaVideo />
-              </button>
-              <button
-                style={modernStyles.button}
-                onClick={() => formatText("formatBlock", "<pre>")}
-              >
-                <FaCode />
-              </button>
-              <button style={modernStyles.button} onClick={handleViewSource}>
-                <FaCode /> Source
-              </button>
-              <button style={modernStyles.button} onClick={toggleFullScreen}>
-                {isFullScreen ? <FaCompress /> : <FaExpand />}
-              </button>
-            </div>
+          ))}
+          <div style={modernStyles.toolbarGroup}>
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+              style={{ width: "24px", height: "24px" }}
+            />
+            <button style={modernStyles.button} onClick={handleApplyTextColor}>
+              <FaPalette />
+            </button>
+            <input
+              type="color"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+              style={{ width: "24px", height: "24px" }}
+            />
+            <button style={modernStyles.button} onClick={handleApplyBackgroundColor}>
+              <FaHighlighter />
+            </button>
           </div>
+        </div>
+      )}
 
-          <div
-            ref={editorRef}
-            contentEditable
-            style={{
-              ...modernStyles.editor,
-              minHeight: isFullScreen ? "calc(100vh - 180px)" : "50vh",
-              maxHeight: isFullScreen ? "calc(100vh - 180px)" : "50vh",
-              fontFamily,
-              fontSize: `${fontSize}px`,
-            }}
-            onInput={handleInput}
-          />
-        </>
+      {viewMode === "edit" && (
+        <div
+          ref={editorRef}
+          contentEditable={!mergedConfig.readonly}
+          style={{
+            ...modernStyles.editor,
+            fontFamily,
+            fontSize: `${fontSize}px`,
+          }}
+          onInput={handleInput}
+        />
       )}
 
       {viewMode === "preview" && (
@@ -1141,8 +1155,8 @@ const JsTextEditor = () => {
             value={editorContent}
             onChange={(e) => {
               setEditorContent(e.target.value);
-              if (editorRef.current)
-                editorRef.current.innerHTML = e.target.value;
+              if (editorRef.current) editorRef.current.innerHTML = e.target.value;
+              if (onChange) onChange(e.target.value);
             }}
           />
         </Modal.Body>
@@ -1222,8 +1236,7 @@ const JsTextEditor = () => {
       />
 
       <div style={modernStyles.statusBar}>
-        Words: {wordCount} | Characters: {charCount} | Last saved:{" "}
-        {new Date().toLocaleTimeString()}
+        Words: {wordCount} | Characters: {charCount} | Last saved: {new Date().toLocaleTimeString()}
       </div>
 
       {showNotification && (
