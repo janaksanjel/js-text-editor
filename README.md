@@ -12,7 +12,7 @@ A modern, customizable rich text editor built with React and Bootstrap, offering
 Install the package via npm:
 
 ```bash
-npm install jstexteditor
+npm install js-text-editor
 ```
 
 Ensure you have the required peer dependencies installed:
